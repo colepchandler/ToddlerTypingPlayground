@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Toddler Typing Playground</title>
+    <style>
+        body {
+            margin: 0;
+            background: #f0f8ff;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            display: block;
+        }
+        #overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="playground"></canvas>
+    <script>
+        // Canvas setup
+        const canvas = document.getElementById('playground');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // Random Color Generator
+        function getRandomColor() {
+            return `hsl(${Math.random() * 360}, 70%, 60%)`;
+        }
+
+        // Random Position and Size
+        function getRandomPosition() {
+            return {
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                size: Math.random() * 70 + 35 //"70 + 35" = changed from original "50 +20"
+            };
+        }
+
+        // Draw Burst Function
+        function drawBurst(x, y, size, color) {
+            ctx.beginPath();
+            for (let i = 0; i < 8; i++) {
+                const angle = (i / 8) * (2 * Math.PI);
+                const dx = x + Math.cos(angle) * size;
+                const dy = y + Math.sin(angle) * size;
+                ctx.lineTo(dx, dy);
+            }
+            ctx.closePath();
+            ctx.fillStyle = color;
+            ctx.fill();
+        }
+
+        // Key Press Event Listener
+        window.addEventListener('keydown', (e) => {
+            const { x, y, size } = getRandomPosition();
+            const color = getRandomColor();
+
+            // Draw burst
+            drawBurst(x, y, size, color);
+
+
+            // Draw a random letter, number, or symbol
+            ctx.fillStyle = getRandomColor();
+            ctx.font = `${size}px Arial`;
+            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'; //changed from original; removed symbols "!@#$%^&*"
+            const randomChar = characters[Math.floor(Math.random() * characters.length)];
+            ctx.fillText(randomChar, x, y);
+        });
+
+        // Resize Canvas on Window Resize
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+    </script>
+</body>
+</html>
+
+// Add a specific letter based on the key pressed
+        function addLetter(key) {
+            const { x, y, size } = getRandomPosition();
+
+            letters.push({
+                x,
+                y,
+                size,
+                opacity: 1,
+                letter: key.toUpperCase(), // Convert key to uppercase for consistency
+                color: getRandomColor()
+            });
+        }
