@@ -10,17 +10,10 @@
             background: #f0f8ff;
             overflow: hidden;
             font-family: Arial, sans-serif;
+            cursor: pointer; /* Indicate clickable areas */
         }
         canvas {
             display: block;
-        }
-        #overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
         }
     </style>
 </head>
@@ -33,6 +26,53 @@
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
+        // Store shapes and letters
+        const elements = [];
+
+        // Donation link configuration
+        const donationLink = {
+            text: "Buy Me a Coffee",
+            url: "https://buymeacoffee.com/joyfullycreated",
+            fontSize: 16,
+            padding: 10,
+            color: "rgba(100, 100, 100, 0.8)" // Soft gray color
+        };
+
+        // Update donation link position dynamically
+        function updateDonationLinkPosition() {
+            donationLink.fontSize = Math.max(14, canvas.width / 50); // Scale font size
+            ctx.font = `${donationLink.fontSize}px Arial`;
+            const textWidth = ctx.measureText(donationLink.text).width;
+            donationLink.x = canvas.width - textWidth - donationLink.padding;
+            donationLink.y = canvas.height - donationLink.padding;
+        }
+
+        // Draw the donation link
+        function drawDonationLink() {
+            ctx.fillStyle = donationLink.color;
+            ctx.font = `${donationLink.fontSize}px Arial`;
+            ctx.textAlign = "right";
+            ctx.textBaseline = "bottom";
+            ctx.fillText(donationLink.text, canvas.width - donationLink.padding, canvas.height - donationLink.padding);
+        }
+
+        // Handle donation link click
+        canvas.addEventListener("click", (e) => {
+            const mouseX = e.clientX;
+            const mouseY = e.clientY;
+
+            ctx.font = `${donationLink.fontSize}px Arial`;
+            const textWidth = ctx.measureText(donationLink.text).width;
+            const linkLeft = canvas.width - textWidth - donationLink.padding;
+            const linkRight = canvas.width - donationLink.padding;
+            const linkTop = canvas.height - donationLink.fontSize - donationLink.padding;
+            const linkBottom = canvas.height - donationLink.padding;
+
+            if (mouseX >= linkLeft && mouseX <= linkRight && mouseY >= linkTop && mouseY <= linkBottom) {
+                window.open(donationLink.url, "_blank"); // Open the link in a new tab
+            }
+        });
+
         // Random Color Generator
         function getRandomColor() {
             return `hsl(${Math.random() * 360}, 70%, 60%)`;
@@ -43,60 +83,77 @@
             return {
                 x: Math.random() * canvas.width,
                 y: Math.random() * canvas.height,
-                size: Math.random() * 70 + 35 //"70 + 35" = changed from original "50 +20"
+                size: Math.random() * 70 + 35 // Changed from "50 + 20"
             };
         }
 
-        // Draw Burst Function
-        function drawBurst(x, y, size, color) {
-            ctx.beginPath();
-            for (let i = 0; i < 8; i++) {
-                const angle = (i / 8) * (2 * Math.PI);
-                const dx = x + Math.cos(angle) * size;
-                const dy = y + Math.sin(angle) * size;
-                ctx.lineTo(dx, dy);
+        // Add Burst or Letter Element
+        function addElement(type) {
+            const { x, y, size } = getRandomPosition();
+            const color = getRandomColor();
+
+            if (type === "burst") {
+                elements.push({ x, y, size, color, type });
+            } else if (type === "letter") {
+                const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+                const randomChar = characters[Math.floor(Math.random() * characters.length)];
+                elements.push({ x, y, size, color, type, text: randomChar });
             }
-            ctx.closePath();
-            ctx.fillStyle = color;
-            ctx.fill();
+        }
+
+        // Draw Elements (Bursts and Letters)
+        function drawElements() {
+            elements.forEach((el, index) => {
+                ctx.fillStyle = el.color;
+
+                if (el.type === "burst") {
+                    ctx.beginPath();
+                    for (let i = 0; i < 8; i++) {
+                        const angle = (i / 8) * (2 * Math.PI);
+                        const dx = el.x + Math.cos(angle) * el.size;
+                        const dy = el.y + Math.sin(angle) * el.size;
+                        ctx.lineTo(dx, dy);
+                    }
+                    ctx.closePath();
+                    ctx.fill();
+                } else if (el.type === "letter") {
+                    ctx.font = `${el.size}px Arial`;
+                    ctx.textAlign = "center";
+                    ctx.fillText(el.text, el.x, el.y);
+                }
+
+                // Fade out and remove elements when fully faded
+                el.size -= 0.5;
+                if (el.size <= 0) {
+                    elements.splice(index, 1); // Remove faded element
+                }
+            });
         }
 
         // Key Press Event Listener
         window.addEventListener('keydown', (e) => {
-            const { x, y, size } = getRandomPosition();
-            const color = getRandomColor();
-
-            // Draw burst
-            drawBurst(x, y, size, color);
-
-
-            // Draw a random letter, number, or symbol
-            ctx.fillStyle = getRandomColor();
-            ctx.font = `${size}px Arial`;
-            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'; //changed from original; removed symbols "!@#$%^&*"
-            const randomChar = characters[Math.floor(Math.random() * characters.length)];
-            ctx.fillText(randomChar, x, y);
+            addElement("burst");
+            addElement("letter");
         });
+
+        // Animation Loop
+        function drawScene() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawElements(); // Draw bursts and letters
+            drawDonationLink(); // Always draw the donation link last
+            requestAnimationFrame(drawScene);
+        }
 
         // Resize Canvas on Window Resize
         window.addEventListener('resize', () => {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
+            updateDonationLinkPosition();
         });
+
+        // Initial Setup
+        updateDonationLinkPosition();
+        drawScene(); // Start the animation loop
     </script>
 </body>
 </html>
-
-// Add a specific letter based on the key pressed
-        function addLetter(key) {
-            const { x, y, size } = getRandomPosition();
-
-            letters.push({
-                x,
-                y,
-                size,
-                opacity: 1,
-                letter: key.toUpperCase(), // Convert key to uppercase for consistency
-                color: getRandomColor()
-            });
-        }
